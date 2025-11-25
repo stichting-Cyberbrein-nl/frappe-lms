@@ -5,9 +5,6 @@ services:
     image: mariadb:10.8
     environment:
       MYSQL_ROOT_PASSWORD: 123
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
     volumes:
       - mariadb-data:/var/lib/mysql
     restart: unless-stopped
@@ -41,7 +38,6 @@ services:
       - redis-cache
       - redis-queue
       - redis-socketio
-    restart: unless-stopped
 
 volumes:
   mariadb-data:
