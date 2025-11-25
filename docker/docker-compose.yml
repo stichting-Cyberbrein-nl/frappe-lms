@@ -23,7 +23,7 @@ services:
     working_dir: /home/frappe
     volumes:
       - ./init.sh:/workspace/init.sh
-      - frappe-lms-bench:/home/frappe/frappe-lms-bench
+      - frappes-lms-bench:/home/frappe/frappes-lms-bench
     ports:
       - "8000:8000"
       - "9000:9000"
@@ -35,4 +35,4 @@ services:
 
 volumes:
   mariadb-data:
-  frappe-lms-bench:
+  frappes-lms-bench:
