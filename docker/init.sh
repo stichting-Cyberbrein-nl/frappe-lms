@@ -30,23 +30,18 @@ cd $BENCH_DIR
 
 # ---------------------------------------------------
 # 3. DATABASE & REDIS CORRECT INSTELLEN
-#
-# Je Compose gebruikt:
-# - mariadb
-# - redis-cache
-# - redis-queue
-# - redis-socketio
 # ---------------------------------------------------
 echo "Configuring DB + Redis hosts..."
 
 bench set-mariadb-host mariadb
 
-bench set-redis-cache-host redis-cache:6379
-bench set-redis-queue-host redis-queue:6379
-bench set-redis-socketio-host redis-socketio:6379
+# LET OP: protocol redis:// moet erbij
+bench set-redis-cache-host redis://redis-cache:6379
+bench set-redis-queue-host redis://redis-queue:6379
+bench set-redis-socketio-host redis://redis-socketio:6379
 
 # ---------------------------------------------------
-# 4. WATCHER VERWIJDEREN (NIET NODIG IN DOCKER)
+# 4. WATCHER VERWIJDEREN
 # ---------------------------------------------------
 sed -i '/watch/d' Procfile || true
 
@@ -74,16 +69,13 @@ echo "Installing LMS..."
 bench --site $SITE install-app lms
 
 # ---------------------------------------------------
-# 8. DEVELOPER MODE AAN (HANDIG VOOR DEBUG)
+# 8. DEVELOPER MODE AAN
 # ---------------------------------------------------
 bench --site $SITE set-config developer_mode 1
 
 # ---------------------------------------------------
-# 9. SOCKETIO FIX → GEEN 11000 MEER
-#    We laten socketio op 9000 draaien
+# 9. SOCKETIO FIX – GEEN 11000 MEER
 # ---------------------------------------------------
-echo "Fixing realtime config (SocketIO)..."
-
 bench --site $SITE set-config socketio_port 9000
 bench --site $SITE set-config eventlet_port ""
 
@@ -96,13 +88,11 @@ bench --site $SITE clear-website-cache
 # ---------------------------------------------------
 # 11. DOMEIN TOEVOEGEN
 # ---------------------------------------------------
-echo "Adding domain to site..."
 bench setup add-domain $SITE $SITE
 
 # ---------------------------------------------------
 # 12. NGINX GENEREREN
 # ---------------------------------------------------
-echo "Generating Nginx config..."
 bench setup nginx
 
 # ---------------------------------------------------
