@@ -6,12 +6,12 @@ BENCH_DIR="/home/frappe/frappe-lms-bench"
 SITE="lms.hackforceone.nl"
 MYSQL_PASSWORD=123
 ADMIN_PASSWORD=admin
-LMS_REPO="https://github.com/cyberbrein-dokploy/lms.git"
+LMS_REPO="https://github.com/stichting-Cyberbrein-nl/frappe-lms.git"
 
 echo "Starting LMS init script..."
 
 # ---------------------------------------------------
-# Bench bestaat → check of alles compleet is
+# Bench bestaat → check volledigheid
 # ---------------------------------------------------
 if [ -d "$BENCH_DIR" ] && [ -f "$BENCH_DIR/Procfile" ] && [ -d "$BENCH_DIR/sites" ]; then
     echo "Bench already exists and is valid → Starting bench..."
@@ -21,12 +21,13 @@ if [ -d "$BENCH_DIR" ] && [ -f "$BENCH_DIR/Procfile" ] && [ -d "$BENCH_DIR/sites
 fi
 
 echo "Bench does not exist or is incomplete → Recreating bench..."
+
 rm -rf "$BENCH_DIR" || true
 
 # ---------------------------------------------------
 # Nieuwe bench maken
 # ---------------------------------------------------
-bench init --skip-redis-config-generation frappe-bench
+bench init --skip-redis-config-generation frappe-lms-bench
 cd $BENCH_DIR
 
 # ---------------------------------------------------
