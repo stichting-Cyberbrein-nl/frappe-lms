@@ -1,77 +1,73 @@
 #!/bin/bash
+
 set -e
 
 BENCH_DIR="/home/frappe/frappe-bench"
 SITE="lms.hackforceone.nl"
-MYSQL_ROOT_PASSWORD=123
-DB_NAME="frappe"
-DB_USER="frappe"
-DB_PASSWORD="frappe123"
-ADMIN_PASSWORD="admin"
+MYSQL_PASSWORD=123
+ADMIN_PASSWORD=admin
 
-# ------------------------------------------
-# Als bench al bestaat → alleen starten
-# ------------------------------------------
+# --------------------------
+# Check of bench al bestaat
+# --------------------------
 if [ -d "$BENCH_DIR" ]; then
-    echo "Bench already exists — starting in production mode..."
+    echo "Bench already exists, starting bench..."
     cd $BENCH_DIR
-    bench use $SITE
     bench start
     exit 0
 fi
 
-# ------------------------------------------
-# Nieuwe bench maken
-# ------------------------------------------
 echo "Creating new bench..."
 bench init --skip-redis-config-generation frappe-bench
 cd $BENCH_DIR
 
-# ------------------------------------------
-# Redis en MariaDB hosts instellen
-# (Deze werken zonder --site)
-# ------------------------------------------
+# --------------------------
+# Correcte Redis hosts
+# --------------------------
 bench set-mariadb-host mariadb
 bench set-redis-cache-host redis-cache:6379
 bench set-redis-queue-host redis-queue:6379
 bench set-redis-socketio-host redis-socketio:6379
 
-# Watch tasks uit Procfile halen
-sed -i '/watch/d' Procfile
+# --------------------------
+# Frappe-lms app installeren
+# --------------------------
+bench get-app lms /workspace
 
-# ------------------------------------------
-# LMS app binnenhalen
-# ------------------------------------------
-bench get-app lms
-
-# ------------------------------------------
-# Nieuwe site aanmaken
-# ------------------------------------------
+# --------------------------
+# Nieuwe site maken
+# --------------------------
 bench new-site $SITE \
-    --mariadb-root-password $MYSQL_ROOT_PASSWORD \
+    --mariadb-root-password $MYSQL_PASSWORD \
     --admin-password $ADMIN_PASSWORD \
     --no-mariadb-socket
 
-# ------------------------------------------
-# ✨ SITE-bestemming bestaat nu pas
-# Nu mag je set-config gebruiken!
-# ------------------------------------------
-bench --site $SITE set-config db_name $DB_NAME
-bench --site $SITE set-config db_password $DB_PASSWORD
-
+# --------------------------
 # LMS installeren
+# --------------------------
 bench --site $SITE install-app lms
 
-# Production settings
-bench --site $SITE set-config developer_mode 0
-bench --site $SITE enable-scheduler
+# --------------------------
+# Fix Developer mode
+# --------------------------
+bench --site $SITE set-config developer_mode 1
 bench --site $SITE clear-cache
 
+# --------------------------
 # Domain koppelen
+# --------------------------
 bench setup add-domain $SITE $SITE
 bench setup nginx
 
-bench use $SITE
+# --------------------------
+# Worker processen goedzetten
+# (Procfile van socketio + web intact laten!)
+# --------------------------
+# Watcher niet nodig
+sed -i '/watch/d' Procfile
 
-echo "Production-ready bench starting..."
+# --------------------------
+# Services starten
+# --------------------------
+bench use $SITE
 bench start
