@@ -2,7 +2,7 @@
 
 set -e
 
-BENCH_DIR="/home/frappe/frappe-bench"
+BENCH_DIR="/home/frappe/frappe-lms-bench"
 SITE="lms.hackforceone.nl"
 MYSQL_PASSWORD=123
 ADMIN_PASSWORD=admin
