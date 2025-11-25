@@ -6,7 +6,6 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake
     environment:
       MYSQL_ROOT_PASSWORD: 123
     volumes:
@@ -28,10 +27,11 @@ services:
     environment:
       - SHELL=/bin/bash
     volumes:
-      - .:/workspace
+      - ./init.sh:/workspace/init.sh
+      - frappe-bench:/home/frappe/frappe-bench
     ports:
-      - 8000:8000
-      - 9000:9000
+      - "8000:8000"
+      - "9000:9000"
     depends_on:
       - mariadb
       - redis-cache
@@ -40,3 +40,4 @@ services:
 
 volumes:
   mariadb-data:
+  frappe-bench:
