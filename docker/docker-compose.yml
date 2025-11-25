@@ -7,32 +7,26 @@ services:
       MYSQL_ROOT_PASSWORD: 123
     volumes:
       - mariadb-data:/var/lib/mysql
-    restart: unless-stopped
 
   redis-cache:
     image: redis:alpine
-    restart: unless-stopped
 
   redis-queue:
     image: redis:alpine
-    restart: unless-stopped
 
   redis-socketio:
     image: redis:alpine
-    restart: unless-stopped
 
   frappe:
     image: frappe/bench:latest
     command: bash /workspace/init.sh
     working_dir: /home/frappe
-    environment:
-      - SHELL=/bin/bash
+    volumes:
+      - ./init.sh:/workspace/init.sh
+      - frappe-lms-bench:/home/frappe/frappe-lms-bench
     ports:
       - "8000:8000"
       - "9000:9000"
-    volumes:
-      - ./init.sh:/workspace/init.sh
-      - frappe-bench:/home/frappe/frappe-bench
     depends_on:
       - mariadb
       - redis-cache
@@ -41,4 +35,4 @@ services:
 
 volumes:
   mariadb-data:
-  frappe-bench:
+  frappe-lms-bench:
