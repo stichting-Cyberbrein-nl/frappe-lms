@@ -2,7 +2,7 @@
 
 set -e
 
-BENCH_DIR="/home/frappe/frappe-lms-bench"
+BENCH_DIR="/home/frappe/frappes-lms-bench"
 SITE="lms.hackforceone.nl"
 MYSQL_PASSWORD=123
 ADMIN_PASSWORD=admin
@@ -27,7 +27,7 @@ rm -rf "$BENCH_DIR" || true
 # ---------------------------------------------------
 # Nieuwe bench maken
 # ---------------------------------------------------
-bench init --skip-redis-config-generation frappe-lms-bench
+bench init --skip-redis-config-generation frappes-lms-bench
 cd $BENCH_DIR
 
 # ---------------------------------------------------
