@@ -32,9 +32,9 @@ bench new-site lms.hackforceone.nl \
 --admin-password admin \
 --no-mariadb-socket
 
-bench --site lms.localhost install-app lms
-bench --site lms.localhost set-config developer_mode 1
-bench --site lms.localhost clear-cache
-bench use lms.localhost
+bench --site lms.hackforceone.nl install-app lms
+bench --site lms.hackforceone.nl set-config developer_mode 1
+bench --site lms.hackforceone.nl clear-cache
+bench use lms.hackforceone.nl
 
 bench start
