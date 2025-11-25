@@ -26,7 +26,7 @@ sed -i '/watch/d' ./Procfile
 
 bench get-app lms
 
-bench new-site lms.localhost \
+bench new-site lms.hackforceone.nl \
 --force \
 --mariadb-root-password 123 \
 --admin-password admin \
