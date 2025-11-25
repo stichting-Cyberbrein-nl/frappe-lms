@@ -1,73 +1,42 @@
-#!/bin/bash
+version: "3.7"
 
-set -e
+services:
+  mariadb:
+    image: mariadb:10.8
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+    volumes:
+      - mariadb-data:/var/lib/mysql
 
-BENCH_DIR="/home/frappe/frappe-bench"
-SITE="lms.hackforceone.nl"
-MYSQL_PASSWORD=123
-ADMIN_PASSWORD=admin
+  redis-cache:
+    image: redis:alpine
 
-# --------------------------
-# Check of bench al bestaat
-# --------------------------
-if [ -d "$BENCH_DIR" ]; then
-    echo "Bench already exists, starting bench..."
-    cd $BENCH_DIR
-    bench start
-    exit 0
-fi
+  redis-queue:
+    image: redis:alpine
 
-echo "Creating new bench..."
-bench init --skip-redis-config-generation frappe-bench
-cd $BENCH_DIR
+  redis-socketio:
+    image: redis:alpine
 
-# --------------------------
-# Correcte Redis hosts
-# --------------------------
-bench set-mariadb-host mariadb
-bench set-redis-cache-host redis-cache:6379
-bench set-redis-queue-host redis-queue:6379
-bench set-redis-socketio-host redis-socketio:6379
+  frappe:
+    image: frappe/bench:latest
+    command: bash /workspace/init.sh
+    working_dir: /home/frappe
+    environment:
+      - SHELL=/bin/bash
+    volumes:
+      - .:/workspace
+    ports:
+      - 8000:8000
+      - 9000:9000
+    depends_on:
+      - mariadb
+      - redis-cache
+      - redis-queue
+      - redis-socketio
 
-# --------------------------
-# Frappe-lms app installeren
-# --------------------------
-bench get-app lms /workspace
-
-# --------------------------
-# Nieuwe site maken
-# --------------------------
-bench new-site $SITE \
-    --mariadb-root-password $MYSQL_PASSWORD \
-    --admin-password $ADMIN_PASSWORD \
-    --no-mariadb-socket
-
-# --------------------------
-# LMS installeren
-# --------------------------
-bench --site $SITE install-app lms
-
-# --------------------------
-# Fix Developer mode
-# --------------------------
-bench --site $SITE set-config developer_mode 1
-bench --site $SITE clear-cache
-
-# --------------------------
-# Domain koppelen
-# --------------------------
-bench setup add-domain $SITE $SITE
-bench setup nginx
-
-# --------------------------
-# Worker processen goedzetten
-# (Procfile van socketio + web intact laten!)
-# --------------------------
-# Watcher niet nodig
-sed -i '/watch/d' Procfile
-
-# --------------------------
-# Services starten
-# --------------------------
-bench use $SITE
-bench start
+volumes:
+  mariadb-data:
