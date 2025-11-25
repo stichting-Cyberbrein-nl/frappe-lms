@@ -11,15 +11,19 @@ services:
       MYSQL_ROOT_PASSWORD: 123
     volumes:
       - mariadb-data:/var/lib/mysql
+    restart: unless-stopped
 
   redis-cache:
     image: redis:alpine
+    restart: unless-stopped
 
   redis-queue:
     image: redis:alpine
+    restart: unless-stopped
 
   redis-socketio:
     image: redis:alpine
+    restart: unless-stopped
 
   frappe:
     image: frappe/bench:latest
@@ -27,16 +31,21 @@ services:
     working_dir: /home/frappe
     environment:
       - SHELL=/bin/bash
-    volumes:
-      - .:/workspace
     ports:
-      - 8000:8000
-      - 9000:9000
+      - "8000:8000"
+      - "9000:9000"
     depends_on:
       - mariadb
       - redis-cache
       - redis-queue
       - redis-socketio
+    volumes:
+      - ./init.sh:/workspace/init.sh
+      - frappe-sites:/home/frappe/frappe-bench/sites
+      - frappe-apps:/home/frappe/frappe-bench/apps
+    restart: unless-stopped
 
 volumes:
   mariadb-data:
+  frappe-sites:
+  frappe-apps:
