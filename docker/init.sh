@@ -2,70 +2,72 @@
 
 set -e
 
-BENCH_DIR="/home/frappe/frappes-lms-bench"
+BENCH_DIR="/home/frappe/frappe-bench"
 SITE="lms.hackforceone.nl"
 MYSQL_PASSWORD=123
 ADMIN_PASSWORD=admin
-LMS_REPO="https://github.com/stichting-Cyberbrein-nl/frappe-lms.git"
 
-echo "Starting LMS init script..."
-
-# ---------------------------------------------------
-# Bench bestaat → check volledigheid
-# ---------------------------------------------------
-if [ -d "$BENCH_DIR" ] && [ -f "$BENCH_DIR/Procfile" ] && [ -d "$BENCH_DIR/sites" ]; then
-    echo "Bench already exists and is valid → Starting bench..."
+# --------------------------
+# Check of bench al bestaat
+# --------------------------
+if [ -d "$BENCH_DIR" ]; then
+    echo "Bench already exists, starting bench..."
     cd $BENCH_DIR
     bench start
     exit 0
 fi
 
-echo "Bench does not exist or is incomplete → Recreating bench..."
-
-rm -rf "$BENCH_DIR" || true
-
-# ---------------------------------------------------
-# Nieuwe bench maken
-# ---------------------------------------------------
-bench init --skip-redis-config-generation frappes-lms-bench
+echo "Creating new bench..."
+bench init --skip-redis-config-generation frappe-bench
 cd $BENCH_DIR
 
-# ---------------------------------------------------
-# DB + Redis instellen
-# ---------------------------------------------------
+# --------------------------
+# Correcte Redis hosts
+# --------------------------
 bench set-mariadb-host mariadb
-bench set-redis-cache-host redis://redis-cache:6379
-bench set-redis-queue-host redis://redis-queue:6379
-bench set-redis-socketio-host redis://redis-socketio:6379
+bench set-redis-cache-host redis-cache:6379
+bench set-redis-queue-host redis-queue:6379
+bench set-redis-socketio-host redis-socketio:6379
 
-# Watcher verwijderen
-sed -i '/watch/d' Procfile || true
+# --------------------------
+# Frappe-lms app installeren
+# --------------------------
+bench get-app lms /workspace
 
-# ---------------------------------------------------
-# LMS installeren
-# ---------------------------------------------------
-bench get-app lms $LMS_REPO
-
-# ---------------------------------------------------
+# --------------------------
 # Nieuwe site maken
-# ---------------------------------------------------
+# --------------------------
 bench new-site $SITE \
     --mariadb-root-password $MYSQL_PASSWORD \
     --admin-password $ADMIN_PASSWORD \
-    --no-mariadb-socket \
-    --force
+    --no-mariadb-socket
 
+# --------------------------
+# LMS installeren
+# --------------------------
 bench --site $SITE install-app lms
-bench --site $SITE set-config developer_mode 1
-bench --site $SITE set-config socketio_port 9000
-bench --site $SITE set-config eventlet_port ""
 
+# --------------------------
+# Fix Developer mode
+# --------------------------
+bench --site $SITE set-config developer_mode 1
 bench --site $SITE clear-cache
 
+# --------------------------
+# Domain koppelen
+# --------------------------
 bench setup add-domain $SITE $SITE
 bench setup nginx
 
-bench use $SITE
+# --------------------------
+# Worker processen goedzetten
+# (Procfile van socketio + web intact laten!)
+# --------------------------
+# Watcher niet nodig
+sed -i '/watch/d' Procfile
 
-echo "Starting bench..."
+# --------------------------
+# Services starten
+# --------------------------
+bench use $SITE
 bench start
