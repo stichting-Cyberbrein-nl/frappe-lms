@@ -1,5 +1,6 @@
 version: "3.7"
 name: lms
+
 services:
   mariadb:
     image: mariadb:10.8
@@ -7,26 +8,42 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
-      - --skip-innodb-read-only-compressed # Temporary fix for MariaDB 10.6
     environment:
       MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: frappe
+      MYSQL_USER: frappe
+      MYSQL_PASSWORD: frappe123
     volumes:
       - mariadb-data:/var/lib/mysql
 
-  redis:
+  redis-cache:
+    image: redis:alpine
+
+  redis-queue:
+    image: redis:alpine
+
+  redis-socketio:
     image: redis:alpine
 
   frappe:
     image: frappe/bench:latest
     command: bash /workspace/init.sh
+    working_dir: /home/frappe
     environment:
       - SHELL=/bin/bash
-    working_dir: /home/frappe
+      - FRAPPE_ENV=production
     volumes:
+      - bench-data:/home/frappe
       - .:/workspace
     ports:
       - 8000:8000
       - 9000:9000
+    depends_on:
+      - mariadb
+      - redis-cache
+      - redis-queue
+      - redis-socketio
 
 volumes:
   mariadb-data:
+  bench-data:
